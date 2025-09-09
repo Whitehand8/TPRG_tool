@@ -7,7 +7,6 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
-  IsIn,
 } from 'class-validator';
 import { ROOM_ERRORS } from '../constants/room.constants';
 
@@ -40,13 +39,4 @@ export class CreateRoomDto {
   @Max(8, { message: ROOM_ERRORS.INVALID_MAX_PARTICIPANTS_MAX })
   @IsOptional()
   maxParticipants?: number = 2;
-
-  @ApiProperty({
-    description: '룰 시스템 ID',
-    enum: ['coc7e', 'dnd5e'],
-    example: 'coc7e',
-  })
-  @IsString()
-  @IsIn(['coc7e', 'dnd5e'])
-  systemId: string;
-  }
+}

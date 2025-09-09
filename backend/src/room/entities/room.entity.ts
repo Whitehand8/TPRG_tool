@@ -31,10 +31,6 @@ export class Room {
   @Check('"max_participants" >= 2 AND "max_participants" <= 8')
   maxParticipants: number;
 
-  @ApiProperty({ description: '룰 시스템 ID', enum: ['coc7e', 'dnd5e'] })
-  @Column({ name: 'system_id', length: 10 })
-  systemId: string;
-
   @ApiProperty({ description: '생성 시간' })
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

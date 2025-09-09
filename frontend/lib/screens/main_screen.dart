@@ -48,6 +48,16 @@ class _MainScreenState extends State<MainScreen> {
               setState(() {
                 _isLoggedIn = true;
               });
+              if (!mounted) return;
+              Navigator.pushReplacementNamed(
+                context,
+                CreateRoomScreen.routeName,
+              );
+            } else {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('로그인에 실패했습니다. 다시 시도해주세요.')),
+              );
             }
           },
           child: Text('로그인', style: TextStyle(fontSize: 18)),
@@ -110,30 +120,6 @@ class _MainScreenState extends State<MainScreen> {
           },
           icon: Icon(Icons.settings),
           label: Text('설정', style: TextStyle(fontSize: 18)),
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-      ),
-      SizedBox(height: 16),
-
-      // 3-1) 더미 방 테스트
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => RoomScreen(
-                      room: Room(id: '1a', name: '더미 방', maxParticipants: 4),
-                    ),
-              ),
-            );
-          },
-          icon: Icon(Icons.bug_report),
-          label: Text('더미 방 테스트', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
           ),
