@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart';
 import 'find_room_screen.dart';
 import 'create_room_screen.dart';
 import 'option_screen.dart';
-import '../services/auth_service.dart'; // AuthService import 추가
+import 'room_screen.dart';
+import '../models/room.dart';
 
-/// 통합 MainScreen: 로그인 전/후 버튼과 로그인 폼을 모두 포함
+/// MainScreen: 로그인 전/후 버튼을 분기하여 보여주는 메인 화면입니다.
 class MainScreen extends StatefulWidget {
   static const String routeName = '/main';
   @override
@@ -13,205 +15,50 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   bool _isLoggedIn = false;
-  bool _showLoginForm = false; // 로그인 폼 표시 여부
-  bool _isLoading = false; // 로딩 상태
-
-  // 로그인 폼 관련 변수
-  final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
-
-  // 색상 변수 정의
-  final Color _primaryColor = Colors.blue;
-  final Color _buttonTextColor = Colors.white;
-  final Color _borderColor = Colors.blueAccent;
-  final Color _linkTextColor = Colors.blue;
-  final Color _appBarColor = Color(0xFF8C7853);
-  final Color _mainButtonBgColor = Color(0xFFD4AF37);
-  final Color _mainButtonTextColor = Color(0xFF2A3439);
-  final Color _linkColor = Color(0xFF9E4638);
-
-  // 로그인 처리 함수
-  Future<void> _onLoginPressed() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-
-    setState(() => _isLoading = true);
-    try {
-      final success = await AuthService.login(
-        email: _email,
-        password: _password,
-      );
-      if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('로그인 성공')));
-        setState(() {
-          _isLoggedIn = true;
-          _showLoginForm = false;
-        });
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('로그인 실패: 이메일/비밀번호를 확인하세요.')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('로그인 중 오류 발생: $e')));
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_showLoginForm ? '로그인' : 'TRPG 메인 화면'),
-        centerTitle: true,
-        backgroundColor: _appBarColor,
-        // 로그인 폼 표시 중에는 뒤로가기 버튼 추가
-        leading:
-            _showLoginForm
-                ? IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () {
-                    setState(() {
-                      _showLoginForm = false;
-                    });
-                  },
-                )
-                : null,
-      ),
+      appBar: AppBar(title: Text('TRPG 1메인 화면'), centerTitle: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child:
-              _showLoginForm
-                  ? _buildLoginForm() // 로그인 폼 표시
-                  : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children:
-                        _isLoggedIn
-                            ? _buildLoggedInButtons()
-                            : _buildLoggedOutButtons(),
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:
+                _isLoggedIn ? _buildLoggedInButtons() : _buildLoggedOutButton(),
+          ),
         ),
       ),
     );
   }
 
-  /// 로그인 폼 위젯
-  Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: ListView(
-        shrinkWrap: true,
-        children: [
-          // 이메일 입력
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: '이메일',
-              labelStyle: TextStyle(color: _primaryColor),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: _primaryColor),
-              ),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            onSaved: (v) => _email = v?.trim() ?? '',
-            validator: (v) {
-              if (v == null || v.isEmpty) return '이메일을 입력하세요';
-              if (!v.contains('@')) return '유효한 이메일을 입력하세요';
-              return null;
-            },
-          ),
-          SizedBox(height: 16),
-
-          // 비밀번호 입력
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: '비밀번호',
-              labelStyle: TextStyle(color: _primaryColor),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: _primaryColor),
-              ),
-            ),
-            obscureText: true,
-            onSaved: (v) => _password = v ?? '',
-            validator: (v) {
-              if (v == null || v.isEmpty) return '비밀번호를 입력하세요';
-              if (v.length < 8) return '8자 이상 입력하세요';
-              return null;
-            },
-          ),
-          SizedBox(height: 24),
-
-          // 로그인 버튼
-          _isLoading
-              ? Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
-                ),
-              )
-              : SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _onLoginPressed,
-                  child: Text(
-                    '로그인',
-                    style: TextStyle(fontSize: 18, color: _mainButtonTextColor),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: _mainButtonBgColor,
-                    side: BorderSide(color: _borderColor, width: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-          SizedBox(height: 16),
-
-          // 회원가입 링크
-          TextButton(
-            onPressed: () {
-              // 회원가입 화면으로 이동 (필요한 경우 구현)
-              // Navigator.pushNamed(context, '/signup');
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('회원가입 기능은 준비 중입니다.')));
-            },
-            child: Text(
-              '아직 회원이 아니신가요? 회원가입',
-              style: TextStyle(color: _linkColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 로그인 전: 로그인 버튼만 노출
-  List<Widget> _buildLoggedOutButtons() {
+  List<Widget> _buildLoggedOutButton() {
     return [
       SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _showLoginForm = true;
-            });
+          onPressed: () async {
+            final result = await Navigator.pushNamed(
+              context,
+              LoginScreen.routeName,
+            );
+            if (result == true) {
+              setState(() {
+                _isLoggedIn = true;
+              });
+            }
           },
           child: Text('로그인', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: _mainButtonBgColor,
-            foregroundColor: _mainButtonTextColor,
-            side: BorderSide(color: _borderColor, width: 2),
+            backgroundColor: Color(0xFFD4AF37), // 버튼 배경색
+            foregroundColor: Color(0xFF2A3439), // 텍스트와 아이콘 색상
+            side: BorderSide(color: Colors.blueAccent, width: 2), // 테두리 색상과 두께
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              // 버튼 모양
+              borderRadius: BorderRadius.circular(8), // 모서리 둥글기
             ),
           ),
         ),
@@ -233,12 +80,6 @@ class _MainScreenState extends State<MainScreen> {
           label: Text('방 만들기', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: _mainButtonBgColor,
-            foregroundColor: _mainButtonTextColor,
-            side: BorderSide(color: _borderColor, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
           ),
         ),
       ),
@@ -255,12 +96,6 @@ class _MainScreenState extends State<MainScreen> {
           label: Text('방 찾기', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: _mainButtonBgColor,
-            foregroundColor: _mainButtonTextColor,
-            side: BorderSide(color: _borderColor, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
           ),
         ),
       ),
@@ -277,12 +112,30 @@ class _MainScreenState extends State<MainScreen> {
           label: Text('설정', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: _mainButtonBgColor,
-            foregroundColor: _mainButtonTextColor,
-            side: BorderSide(color: _borderColor, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+          ),
+        ),
+      ),
+      SizedBox(height: 16),
+
+      // 3-1) 더미 방 테스트
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => RoomScreen(
+                      room: Room(id: '1a', name: '더미 방', maxParticipants: 4),
+                    ),
+              ),
+            );
+          },
+          icon: Icon(Icons.bug_report),
+          label: Text('더미 방 테스트', style: TextStyle(fontSize: 18)),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 14),
           ),
         ),
       ),
@@ -301,12 +154,6 @@ class _MainScreenState extends State<MainScreen> {
           label: Text('나가기', style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: _mainButtonBgColor,
-            foregroundColor: _mainButtonTextColor,
-            side: BorderSide(color: _borderColor, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
           ),
         ),
       ),

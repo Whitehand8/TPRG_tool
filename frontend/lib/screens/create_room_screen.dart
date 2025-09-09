@@ -1,5 +1,3 @@
-// lib/screens/create_room_screen.dart
-
 import 'package:flutter/material.dart';
 import '../models/room.dart';
 import '../services/room_service.dart';
@@ -20,47 +18,26 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   // 화면 상태 변수 (폼에 바인딩)
   String _roomName = '';
   String _password = '';
-  bool _isPublic = false;
-  int _capacity = 4;
+  int maxParticipants = 4; // maxParticipants (2~8)
 
   bool _isLoading = false; // API 호출 중 로딩 인디케이터 표시
 
-  // 인원 수 감소 (최소 1명)
+  // 인원 수 감소 (최소 2명)
   void _decrementCapacity() {
-    if (_capacity > 1) {
+    if (maxParticipants > 2) {
       setState(() {
-        _capacity--;
-        if (_capacity == 1) {
-          // 1명인 방은 무조건 개인방
-          _isPublic = false;
-        }
+        maxParticipants--;
       });
     }
   }
 
   // 인원 수 증가 (최대 8명)
   void _incrementCapacity() {
-    if (_capacity < 8) {
+    if (maxParticipants < 8) {
       setState(() {
-        _capacity++;
+        maxParticipants++;
       });
     }
-  }
-
-  // 공개 여부 토글
-  void _togglePublic(bool newValue) {
-    setState(() {
-      // capacity가 1명인 경우 반드시 개인방
-      if (_capacity == 1) {
-        _isPublic = false;
-      } else {
-        _isPublic = newValue;
-      }
-      // 공개방이면 비밀번호는 지워 버리기
-      if (_isPublic) {
-        _password = '';
-      }
-    });
   }
 
   /// 폼 제출: RoomService.createRoom() 호출
@@ -78,8 +55,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       final newRoom = Room(
         name: _roomName,
         password: _password,
-        capacity: _capacity,
-        isPublic: _isPublic,
+        maxParticipants: maxParticipants,
       );
 
       // 4) 서비스 호출
@@ -120,7 +96,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                   labelText: '방 이름',
                   border: OutlineInputBorder(),
                 ),
-                maxLength: 100,
+                maxLength: 50,
                 onSaved: (val) => _roomName = val!.trim(),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -131,30 +107,18 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               ),
               SizedBox(height: 16),
 
-              // 2) 공개 여부 토글
-              SwitchListTile(
-                title: Text(_isPublic ? '공개' : '개인'),
-                subtitle: Text('공개: 누구나 입장 가능 / 개인: 비밀번호 필요'),
-                value: _isPublic,
-                onChanged: _togglePublic,
-              ),
-              SizedBox(height: 16),
-
-              // 3) 비밀번호 입력 (개인방일 때만 활성화)
+              // 3) 비밀번호 입력 (항상 활성화)
               TextFormField(
                 decoration: InputDecoration(
                   labelText: '비밀번호',
                   border: OutlineInputBorder(),
                 ),
-                enabled: !_isPublic,
                 obscureText: true,
                 maxLength: 20,
                 onSaved: (val) => _password = val!.trim(),
                 validator: (val) {
-                  if (!_isPublic) {
-                    if (val == null || val.trim().isEmpty) {
-                      return '개인방 비밀번호를 입력하세요.';
-                    }
+                  if (val == null || val.trim().isEmpty) {
+                    return '비밀번호를 입력하세요.';
                   }
                   return null;
                 },
@@ -162,7 +126,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               SizedBox(height: 16),
 
               // 4) 인원 수 선택
-              Text('인원 수 ($_capacity 명)', style: TextStyle(fontSize: 16)),
+              Text('인원 수 ($maxParticipants 명)', style: TextStyle(fontSize: 16)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -171,7 +135,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                     onPressed: _decrementCapacity,
                   ),
                   SizedBox(width: 24),
-                  Text('$_capacity', style: TextStyle(fontSize: 20)),
+                  Text('$maxParticipants', style: TextStyle(fontSize: 20)),
                   SizedBox(width: 24),
                   IconButton(
                     icon: Icon(Icons.add_circle_outline),
